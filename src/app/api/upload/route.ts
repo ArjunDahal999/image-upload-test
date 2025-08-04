@@ -1,72 +1,51 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { writeFile, mkdir } from "fs/promises";
-import { existsSync } from "fs";
+import fs from "fs";
 import path from "path";
-import { validateFile } from "@/app/upload/utils/fileValidation";
-import { UploadedImage } from "@/types/image";
 
 export async function POST(request: NextRequest) {
   try {
-    // Check authentication
-
+    // Convert NextRequest to Node.js request-like object for formidable
     const formData = await request.formData();
-    const files = formData.getAll("images") as File[];
 
-    if (!files || files.length === 0) {
-      return NextResponse.json({ error: "No files provided" }, { status: 400 });
-    }
-
-    // Validate all files
-    const validationErrors: string[] = [];
-    files.forEach((file, index) => {
-      const validation = validateFile(file);
-      if (!validation.isValid) {
-        validationErrors.push(
-          `File ${index + 1}: ${validation.errors.join(", ")}`
-        );
-      }
-    });
-
-    if (validationErrors.length > 0) {
-      return NextResponse.json(
-        { error: "Validation failed", details: validationErrors },
-        { status: 400 }
-      );
-    }
+    // Create a temporary file handling approach
+    const uploadDir = path.join(process.cwd(), "public", "uploads", "salons");
 
     // Ensure upload directory exists
-    const uploadDir = path.join(process.cwd(), "public", "uploads", "salons");
-    if (!existsSync(uploadDir)) {
-      await mkdir(uploadDir, { recursive: true });
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
     }
 
-    // Process and save files
-    const uploadedImages: UploadedImage[] = [];
+    const uploadedImages: any[] = [];
+    let fileIndex = 0;
 
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      const bytes = await file.arrayBuffer();
-      const buffer = Buffer.from(bytes);
+    // Process each file from formData
+    for (const [key, value] of formData.entries()) {
+      if (key === "images" && value instanceof File) {
+        const file = value as File;
+        const buffer = Buffer.from(await file.arrayBuffer());
 
-      // Generate unique filename
-      const timestamp = Date.now();
-      const randomString = Math.random().toString(36).substring(2, 15);
-      const extension = path.extname(file.name);
-      const filename = `${timestamp}-${randomString}${extension}`;
-      const filepath = path.join(uploadDir, filename);
+        // Generate a unique filename
+        const timestamp = Date.now();
+        const randomString = Math.random().toString(36).substring(2, 15);
+        const extension = path.extname(file.name);
+        const newFilename = `${timestamp}-${randomString}${extension}`;
+        const filepath = path.join(uploadDir, newFilename);
 
-      // Write file to disk
-      await writeFile(filepath, buffer);
+        // Write file to disk
+        fs.writeFileSync(filepath, buffer);
 
-      // Create response object
-      const uploadedImage: UploadedImage = {
-        url: `/uploads/salons/${filename}`,
-        filename: filename,
-        isFeatured: i === 0, // First image is featured
-      };
+        uploadedImages.push({
+          url: `/uploads/salons/${newFilename}`,
+          filename: newFilename,
+          isFeatured: fileIndex === 0,
+        });
 
-      uploadedImages.push(uploadedImage);
+        fileIndex++;
+      }
+    }
+
+    if (uploadedImages.length === 0) {
+      return NextResponse.json({ error: "No files provided" }, { status: 400 });
     }
 
     return NextResponse.json({
