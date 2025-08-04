@@ -66,7 +66,7 @@ export function useFileUpload() {
         });
       }, 200);
 
-      const response = await fetch("/api/upload", {
+      const response = await fetch("/api/uploads", {
         method: "POST",
         body: formData,
       });

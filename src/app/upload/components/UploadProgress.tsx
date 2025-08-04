@@ -1,31 +1,36 @@
-'use client';
+"use client";
 
-import { UploadProgressProps } from '@/types/image';
+import { UploadProgressProps } from "@/types/image";
 
-export default function UploadProgress({ 
-  progress, 
-  uploading, 
-  uploadedImages 
+export default function UploadProgress({
+  progress,
+  uploading,
+  uploadedImages,
 }: UploadProgressProps) {
   const progressEntries = Object.entries(progress);
-  
-  if (!uploading && progressEntries.length === 0 && uploadedImages.length === 0) {
+
+  if (
+    !uploading &&
+    progressEntries.length === 0 &&
+    uploadedImages.length === 0
+  ) {
     return null;
   }
 
+  console.log("Upload Progress:", uploadedImages);
   return (
     <div className="space-y-4">
       {/* Upload Progress */}
       {(uploading || progressEntries.length > 0) && (
         <div className="space-y-3">
           <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-            {uploading ? 'Uploading...' : 'Upload Complete'}
+            {uploading ? "Uploading..." : "Upload Complete"}
           </h3>
-          
+
           {progressEntries.map(([fileKey, progressValue]) => {
-            const fileIndex = parseInt(fileKey.split('-')[1]);
+            const fileIndex = parseInt(fileKey.split("-")[1]);
             const isComplete = progressValue === 100;
-            
+
             return (
               <div key={fileKey} className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
@@ -36,13 +41,11 @@ export default function UploadProgress({
                     {Math.round(progressValue)}%
                   </span>
                 </div>
-                
+
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                   <div
                     className={`h-2 rounded-full transition-all duration-300 ${
-                      isComplete 
-                        ? 'bg-green-500' 
-                        : 'bg-blue-500'
+                      isComplete ? "bg-green-500" : "bg-blue-500"
                     }`}
                     style={{ width: `${progressValue}%` }}
                   />
@@ -52,7 +55,7 @@ export default function UploadProgress({
           })}
         </div>
       )}
-      
+
       {/* Success Message and Uploaded Images */}
       {uploadedImages.length > 0 && (
         <div className="space-y-4">
@@ -73,18 +76,19 @@ export default function UploadProgress({
               </div>
               <div className="ml-3">
                 <p className="text-sm font-medium text-green-800 dark:text-green-200">
-                  Successfully uploaded {uploadedImages.length} image{uploadedImages.length > 1 ? 's' : ''}!
+                  Successfully uploaded {uploadedImages.length} image
+                  {uploadedImages.length > 1 ? "s" : ""}!
                 </p>
               </div>
             </div>
           </div>
-          
+
           {/* Uploaded Images Preview */}
           <div className="space-y-3">
             <h4 className="text-md font-medium text-gray-900 dark:text-gray-100">
               Uploaded Images
             </h4>
-            
+
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {uploadedImages.map((image, index) => (
                 <div
@@ -97,7 +101,7 @@ export default function UploadProgress({
                       Featured
                     </div>
                   )}
-                  
+
                   {/* Image preview */}
                   <div className="aspect-square mb-3 bg-gray-100 dark:bg-gray-700 rounded overflow-hidden">
                     <img
@@ -106,7 +110,7 @@ export default function UploadProgress({
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  
+
                   {/* Image info */}
                   <div className="space-y-1">
                     <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
@@ -114,7 +118,7 @@ export default function UploadProgress({
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       <a
-                        href={image.url}
+                        href={`/api/${image.url}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="hover:text-blue-500 hover:underline"
